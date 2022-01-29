@@ -8,6 +8,7 @@ import java.util.List;
 public class Scanner {
 
     private final String source;
+    private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
     private int current = 0;
     private int line = 1;
@@ -18,51 +19,61 @@ public class Scanner {
 
     public List<Token> scanTokens() {
 
-        char c = advance();
-        List<Token> tokens = new ArrayList<>();
         while (!isAtEnd()) {
 
-            switch (c) {
-                case ' ', '\r', '\t' -> c = advance();
-                case '\n' -> {
-                    c = advance();
-                    line++;
-                }
-                default -> {
-                    if (isNumber(source.charAt(current))) {
-                        start = current;
-                        boolean isInt = true;
-                        try {
-                            while (!isAtEnd() && (isDouble(source.charAt(current)))) {
-                                if (source.charAt(current) == '.') {
-                                    isInt = false;
-                                }
-                                current++;
-                            }
-                            if (source.charAt(current - 1) == '.') {
-                                //error
-                                throw new NumberFormatException("Numarul trebuie sa aiba cifre dupa .");
-                            }
+            start = current;
+            scanToken();
+        }
+        tokens.add(new Token(TokenType.EOF, "", null, line));
+        return tokens;
+    }
 
-                            if (isInt) {
-                                int number = Integer.parseInt(source.substring(start, current));
-                                tokens.add(new Token(TokenType.INT, null, number, line));
-                            } else {
-                                double number = Double.parseDouble(source.substring(start, current));
-                                tokens.add(new Token(TokenType.DOUBLE, null, number, line));
-                            }
-                        } catch (NumberFormatException exception) {
-                            Roc.error(line, exception.getMessage());
-                        }
-                    }
-                    c = peek();
+    private void scanToken() {
+
+        char c = advance();
+        switch (c) {
+            case ' ', '\r', '\t':
+                break;
+            case '\n':
+                line++;
+                break;
+            default:
+                if (isDigit(c)) {
+                    number();
+                } else {
+                    Roc.error(line, "Caracter invalid " + c);
                 }
+                break;
+        }
+    }
+
+    private void number() {
+
+        boolean isInt = true;
+        while (isDigit(peek())) {
+            advance();
+        }
+
+        if (peek() == '.') {
+            if (isDigit(peekNext())) {
+                isInt = false;
+                advance();
+            } else {
+                Roc.error(line, "Numarul nu se poate termina in '.'");
+                return;
+            }
+            while (isDigit(peek())) {
+                advance();
             }
         }
-        if (peek() == '\0') {
-            tokens.add(new Token(TokenType.EOF, null, null, line));
+
+        if (isInt) {
+            int number = Integer.parseInt(source.substring(start, current));
+            tokens.add(new Token(TokenType.INT, null, number, line));
+        } else {
+            double number = Double.parseDouble(source.substring(start, current));
+            tokens.add(new Token(TokenType.DOUBLE, null, number, line));
         }
-        return tokens;
     }
 
     private boolean isAtEnd() {
@@ -70,12 +81,7 @@ public class Scanner {
         return current >= source.length();
     }
 
-    private boolean isDouble(char c) {
-
-        return isNumber(c) || c == '.';
-    }
-
-    private boolean isNumber(char c) {
+    private boolean isDigit(char c) {
 
         return c >= '0' && c <= '9';
     }
@@ -89,5 +95,11 @@ public class Scanner {
 
         if (isAtEnd()) return '\0';
         return source.charAt(current);
+    }
+
+    private char peekNext() {
+
+        if (current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
     }
 }
