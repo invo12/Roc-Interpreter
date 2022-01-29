@@ -3,8 +3,8 @@ package roc.lexer;
 public enum TokenType {
 
     // arithmetic
-    PLUS, MINUS, STAR, SLASH, UNARY_MINUS, INT, STRING,
-    MODULO, DOUBLE,
+    PLUS, MINUS, STAR, SLASH, INT, STRING,
+    MODULO, DOUBLE, EQUAL,
 
     // comparison
     GREATER, GREATER_EQUALS, LESS, LESS_EQUALS,
