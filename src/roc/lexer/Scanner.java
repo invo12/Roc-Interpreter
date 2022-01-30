@@ -120,6 +120,9 @@ public class Scanner {
             case '-':
                 addToken(TokenType.MINUS);
                 break;
+            case '"':
+                string();
+                break;
             case ' ', '\r', '\t':
                 break;
             case '\n':
@@ -128,6 +131,8 @@ public class Scanner {
             default:
                 if (isDigit(c)) {
                     number();
+                } else if (isIdentifierChar(c)) {
+                    identifier();
                 } else {
                     Roc.error(line, "Caracter invalid " + c);
                 }
@@ -164,17 +169,61 @@ public class Scanner {
         }
     }
 
+    private void string() {
+
+        int startLine = line;
+        while (peek() != '"' && !isAtEnd()) {
+
+            if (peek() == '\n') {
+                line++;
+            }
+            advance();
+        }
+
+        if (!match('"')) {
+            Roc.error(line, "Sir de caractere neterminat, inceput la linia " + startLine);
+            return;
+        }
+
+        addToken(TokenType.STRING, source.substring(start + 1, current - 1));
+    }
+
+    private void identifier() {
+
+        while (!isAtEnd() && isIdentifierChar(peek())) {
+            advance();
+        }
+
+        String name = source.substring(start, current);
+        if (keywords.containsKey(name)) {
+            addToken(keywords.get(name));
+            return;
+        }
+
+        addToken(TokenType.IDENTIFIER);
+    }
+
     private void addToken(TokenType type) {
         addToken(type, null);
     }
 
     private void addToken(TokenType type, Object literal) {
-        tokens.add(new Token(type, null, literal, line));
+
+        String text = source.substring(start, current);
+        tokens.add(new Token(type, text, literal, line));
     }
 
     private boolean isAtEnd() {
 
         return current >= source.length();
+    }
+
+    private boolean isIdentifierChar(char c) {
+
+        return isDigit(c) ||
+                (c >= 'a' && c <= 'z') ||
+                (c >= 'A' && c <= 'Z') ||
+                (c == '_');
     }
 
     private boolean isDigit(char c) {

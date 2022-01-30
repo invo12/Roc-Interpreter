@@ -1,3 +1,5 @@
 123.0// + 16 * 4 - 8 (){}[]>
-12
+var pentru cattimp daca altfel din const afiseaza nul clasa
+mosteneste eeee " 123fadsdag"12
 
+si sau
