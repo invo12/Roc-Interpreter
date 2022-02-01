@@ -38,6 +38,8 @@ public class Scanner {
         keywords.put("returneaza", TokenType.RETURNEAZA);
         keywords.put("super", TokenType.SUPER);
         keywords.put("instanta", TokenType.INSTANTA);
+        keywords.put("evadeaza", TokenType.EVADEAZA);
+        keywords.put("continua", TokenType.CONTINUA);
     }
 
     public Scanner(String source) {

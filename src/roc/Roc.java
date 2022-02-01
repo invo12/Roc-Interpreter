@@ -2,6 +2,7 @@ package roc;
 
 import roc.lexer.Scanner;
 import roc.lexer.Token;
+import roc.parser.Parser;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -34,11 +35,14 @@ public class Roc {
 
         List<Token> tokens = scanner.scanTokens();
 
-        if(hadError) System.exit(65);
+        if (hadError) System.exit(65);
 
         for (Token token : tokens) {
             System.out.println(token);
         }
+
+        Parser parser = new Parser(tokens);
+        parser.parse();
     }
 
     public static void error(int line, String message) {
