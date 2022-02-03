@@ -81,7 +81,7 @@ public class Scanner {
                 addToken(TokenType.DOT);
                 break;
             case '=':
-                addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+                addToken(match('=') ? TokenType.EQUALS_EQUALS : TokenType.EQUAL);
                 break;
             case '>':
                 addToken(match('=') ? TokenType.GREATER_EQUALS : TokenType.GREATER);

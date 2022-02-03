@@ -1,5 +1,10 @@
 package roc.utils;
 
+import roc.lexer.Token;
+import roc.lexer.TokenType;
+import roc.parser.AstPrinter;
+import roc.parser.Expr;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -12,7 +17,7 @@ public class GenerateAST {
                 "Binary: Expr left, Token operator, Expr right",
                 "Grouping: Expr expression",
                 "Literal: Object value",
-                "Unary: Token operator, Expr expression"));
+                "Unary: Token operator, Expr right"));
     }
 
     private static void defineAst(
@@ -27,15 +32,31 @@ public class GenerateAST {
         writer.println();
         writer.println("import java.util.List;");
         writer.println();
-        writer.println("abstract class " + baseName + " {");
+        writer.println("public abstract class " + baseName + " {");
         writer.println();
+
+        defineVisitor(writer, baseName, types);
 
         for (String type : types) {
             generateClass(baseName, writer, type);
         }
 
+        writer.println("\tpublic abstract <R> R accept(Visitor<R> visitor);");
         writer.println("}");
         writer.close();
+    }
+
+    private static void defineVisitor(
+            PrintWriter writer, String baseName, List<String> types) {
+        writer.println("\tinterface Visitor<R> {");
+
+        for (String type : types) {
+            String typeName = type.split(":")[0].trim();
+            writer.println("\t\tR visit" + typeName + baseName + "(" +
+                    typeName + " " + baseName.toLowerCase() + ");");
+        }
+
+        writer.println("\t}");
     }
 
     private static void generateClass(String baseName, PrintWriter writer, String type) {
@@ -43,13 +64,24 @@ public class GenerateAST {
         String[] values = type.split(": ");
         String className = values[0];
         String argumentList = values[1];
-        writer.println("\tstatic class " + className + " extends " + baseName + " {");
+        writer.println("\tpublic static class " + className + " extends " + baseName + " {");
         writer.println();
 
         generateMembers(writer, className, argumentList);
         writer.println();
         generateConstructor(writer, className, argumentList);
+        writer.println();
+        generateVisitorMethod(baseName, writer, className);
         writer.println("\t}\n");
+    }
+
+    private static void generateVisitorMethod(String baseName, PrintWriter writer, String className) {
+
+        writer.println("\t\t@Override");
+        writer.println("\t\tpublic <R> R accept(Visitor<R> visitor) {");
+        writer.println("\t\t\treturn visitor.visit" +
+                className + baseName + "(this);");
+        writer.println("\t\t}");
     }
 
     private static void generateMembers(PrintWriter writer, String className, String argumentList) {

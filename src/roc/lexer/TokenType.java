@@ -8,7 +8,7 @@ public enum TokenType {
 
     // comparison
     GREATER, GREATER_EQUALS, LESS, LESS_EQUALS,
-    EQUAL_EQUAL, EXMARK_EQUALS,
+    EQUALS_EQUALS, EXMARK_EQUALS,
 
     // logical
     EXMARK, AND, OR, ADEVARAT, FALS,

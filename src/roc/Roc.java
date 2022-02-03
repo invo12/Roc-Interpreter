@@ -2,6 +2,9 @@ package roc;
 
 import roc.lexer.Scanner;
 import roc.lexer.Token;
+import roc.lexer.TokenType;
+import roc.parser.AstPrinter;
+import roc.parser.Expr;
 import roc.parser.Parser;
 
 import java.nio.charset.Charset;
@@ -35,18 +38,24 @@ public class Roc {
 
         List<Token> tokens = scanner.scanTokens();
 
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
         if (hadError) System.exit(65);
 
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
-
-        Parser parser = new Parser(tokens);
-        parser.parse();
+        System.out.println(new AstPrinter().print(expression));
     }
 
     public static void error(int line, String message) {
         report(line, "", message);
+    }
+
+    public static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
     }
 
     private static void report(int line, String where,
