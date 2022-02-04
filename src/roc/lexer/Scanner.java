@@ -144,14 +144,12 @@ public class Scanner {
 
     private void number() {
 
-        boolean isInt = true;
         while (isDigit(peek())) {
             advance();
         }
 
         if (peek() == '.') {
             if (isDigit(peekNext())) {
-                isInt = false;
                 advance();
             } else {
                 Roc.error(line, "Numarul nu se poate termina in '.'");
@@ -162,13 +160,8 @@ public class Scanner {
             }
         }
 
-        if (isInt) {
-            int number = Integer.parseInt(source.substring(start, current));
-            addToken(TokenType.INT, number);
-        } else {
-            double number = Double.parseDouble(source.substring(start, current));
-            addToken(TokenType.DOUBLE, number);
-        }
+        double number = Double.parseDouble(source.substring(start, current));
+        addToken(TokenType.DOUBLE, number);
     }
 
     private void string() {

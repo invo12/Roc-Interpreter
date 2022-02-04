@@ -6,7 +6,7 @@ import java.util.List;
 
 public abstract class Expr {
 
-	interface Visitor<R> {
+	public interface Visitor<R> {
 		R visitBinaryExpr(Binary expr);
 		R visitGroupingExpr(Grouping expr);
 		R visitLiteralExpr(Literal expr);

@@ -78,7 +78,7 @@ public class Parser {
 
         Expr expr = unary();
 
-        while (match(SLASH, STAR)) {
+        while (match(SLASH, STAR, MODULO)) {
             Token operator = previous();
             Expr right = unary();
 
@@ -104,7 +104,7 @@ public class Parser {
         if (match(FALS)) return new Expr.Literal(false);
         if (match(NUL)) return new Expr.Literal(null);
 
-        if (match(INT) || match(DOUBLE) || match(STRING)) return new Expr.Literal(previous().literal);
+        if (match(DOUBLE) || match(STRING)) return new Expr.Literal(previous().literal);
 
         if (match(LEFT_ROUND)) {
             Expr expression = expression();

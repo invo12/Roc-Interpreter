@@ -1,1 +1,0 @@
-12 < fals - adevarat
