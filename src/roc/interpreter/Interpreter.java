@@ -2,6 +2,7 @@ package roc.interpreter;
 
 import roc.Roc;
 import roc.lexer.Token;
+import roc.memory.Environment;
 import roc.parser.Expr;
 import roc.parser.Stmt;
 
@@ -9,9 +10,11 @@ import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
+    private Environment globalEnv = new Environment();
+
     public void interpret(List<Stmt> statements) {
         try {
-            for(Stmt statement: statements) {
+            for (Stmt statement : statements) {
                 execute(statement);
             }
         } catch (RuntimeError error) {
@@ -96,11 +99,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+
+        return globalEnv.get(expr.name);
+    }
+
     private Object evaluate(Expr expr) {
         return expr.accept(this);
     }
 
-    private Object execute(Stmt stmt){
+    private Object execute(Stmt stmt) {
         return stmt.accept(this);
     }
 
@@ -157,6 +166,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+
+        Object value = null;
+
+        if (stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
+        }
+
+        globalEnv.define(stmt.name.lexeme, value);
         return null;
     }
 }

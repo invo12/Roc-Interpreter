@@ -25,14 +25,35 @@ public class Parser {
 
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            try {
-                statements.add(statement());
-            } catch (ParseError ignored) {
-                return null;
-            }
+            statements.add(declaration());
         }
 
         return statements;
+    }
+
+    private Stmt declaration() {
+
+        try {
+            if (match(VAR)) return varDeclaration();
+
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Stmt varDeclaration() {
+
+        Token name = consume(IDENTIFIER, "Trebuie nume de variabila");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Trebuie ';' la finalul declaratiei de variabile");
+        return new Stmt.Var(name, initializer);
     }
 
     private Stmt statement() {
@@ -134,6 +155,8 @@ public class Parser {
 
         if (match(DOUBLE) || match(STRING)) return new Expr.Literal(previous().literal);
 
+        if (match(IDENTIFIER)) return new Expr.Variable(previous());
+
         if (match(LEFT_ROUND)) {
             Expr expression = expression();
             consume(RIGHT_ROUND, "Trebuie ')' dupa expresie");
@@ -186,5 +209,27 @@ public class Parser {
     private ParseError error(Token token, String message) {
         Roc.error(token, message);
         return new ParseError();
+    }
+
+    private void synchronize() {
+        advance();
+
+        while (!isAtEnd()) {
+            if (previous().type == SEMICOLON) return;
+
+            switch (peek().type) {
+                case CLASA:
+                case FUN:
+                case VAR:
+                case PENTRU:
+                case DACA:
+                case CATTIMP:
+                case ALTFEL:
+                case RETURNEAZA:
+                    return;
+            }
+
+            advance();
+        }
     }
 }
