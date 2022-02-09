@@ -4,6 +4,7 @@ import roc.Roc;
 import roc.lexer.Token;
 import roc.lexer.TokenType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static roc.lexer.TokenType.*;
@@ -20,12 +21,39 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public Expr parse() {
-        try {
-            return expression();
-        } catch (ParseError error) {
-            return null;
+    public List<Stmt> parse() {
+
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            try {
+                statements.add(statement());
+            } catch (ParseError ignored) {
+                return null;
+            }
         }
+
+        return statements;
+    }
+
+    private Stmt statement() {
+
+        if (match(AFISEAZA)) return printStatement();
+
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+
+        Expr expr = expression();
+        consume(SEMICOLON, "Trebuie ';' dupa expresie");
+        return new Stmt.Print(expr);
+    }
+
+    private Stmt expressionStatement() {
+
+        Expr expr = expression();
+        consume(SEMICOLON, "Trebuie ';' dupa expresie");
+        return new Stmt.Expression(expr);
     }
 
     private Expr expression() {
@@ -108,11 +136,11 @@ public class Parser {
 
         if (match(LEFT_ROUND)) {
             Expr expression = expression();
-            consume(RIGHT_ROUND, "Expect ')' after expression");
+            consume(RIGHT_ROUND, "Trebuie ')' dupa expresie");
             return new Expr.Grouping(expression);
         }
 
-        throw error(peek(), "Expect expression.");
+        throw error(peek(), "Trebuie expresie.");
     }
 
     private boolean match(TokenType... types) {

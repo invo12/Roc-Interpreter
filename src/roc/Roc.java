@@ -5,9 +5,9 @@ import roc.interpreter.RuntimeError;
 import roc.lexer.Scanner;
 import roc.lexer.Token;
 import roc.lexer.TokenType;
-import roc.parser.AstPrinter;
 import roc.parser.Expr;
 import roc.parser.Parser;
+import roc.parser.Stmt;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -43,12 +43,12 @@ public class Roc {
         List<Token> tokens = scanner.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         if (hadError) System.exit(65);
         if (hadRuntimeError) System.exit(70);
 
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     public static void error(int line, String message) {
@@ -57,9 +57,9 @@ public class Roc {
 
     public static void error(Token token, String message) {
         if (token.type == TokenType.EOF) {
-            report(token.line, " at end", message);
+            report(token.line, " la final", message);
         } else {
-            report(token.line, " at '" + token.lexeme + "'", message);
+            report(token.line, " la '" + token.lexeme + "'", message);
         }
     }
 

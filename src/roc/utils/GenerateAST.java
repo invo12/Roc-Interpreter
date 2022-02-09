@@ -13,6 +13,12 @@ import java.util.List;
 public class GenerateAST {
 
     public static void main(String[] args) throws IOException {
+
+        defineAst(".", "Stmt", Arrays.asList(
+                "Expression: Expr expression",
+                "Print: Expr expression"
+        ));
+
         defineAst(".", "Expr", Arrays.asList(
                 "Binary: Expr left, Token operator, Expr right",
                 "Grouping: Expr expression",

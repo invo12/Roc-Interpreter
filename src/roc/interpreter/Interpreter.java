@@ -3,17 +3,22 @@ package roc.interpreter;
 import roc.Roc;
 import roc.lexer.Token;
 import roc.parser.Expr;
+import roc.parser.Stmt;
 
-public class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
 
-    public void interpret(Expr expression) {
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+    public void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for(Stmt statement: statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Roc.runtimeError(error);
         }
     }
+
     @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
 
@@ -37,13 +42,13 @@ public class Interpreter implements Expr.Visitor<Object> {
                     return stringify(left) + stringify(right);
                 }
                 throw new RuntimeError(expr.operator,
-                        "Operands must be two numbers or two strings.");
+                        "Operanzii trebuie sa fie doua numere sau doi intregi");
             case MODULO:
                 if (left instanceof Double && right instanceof Double) {
                     return (double) left % (double) right;
                 }
                 throw new RuntimeError(expr.operator,
-                        "Operands must be two whole numbers or two strings.");
+                        "Operanzii trebuie sa fie doua numere sau doi intregi");
             case GREATER:
                 checkNumberOperands(expr.operator, left, right);
                 return (double) left > (double) right;
@@ -95,6 +100,10 @@ public class Interpreter implements Expr.Visitor<Object> {
         return expr.accept(this);
     }
 
+    private Object execute(Stmt stmt){
+        return stmt.accept(this);
+    }
+
     private boolean isTruthy(Object object) {
 
         if (object == null) return false;
@@ -126,13 +135,28 @@ public class Interpreter implements Expr.Visitor<Object> {
 
     private void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;
-        throw new RuntimeError(operator, "Operand must be a number.");
+        throw new RuntimeError(operator, "Operandul trebuie sa fie numar.");
     }
 
     private void checkNumberOperands(Token operator,
                                      Object left, Object right) {
         if (left instanceof Double && right instanceof Double) return;
 
-        throw new RuntimeError(operator, "Operands must be numbers.");
+        throw new RuntimeError(operator, "Operanzii trebuie sa fie numere.");
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
     }
 }
