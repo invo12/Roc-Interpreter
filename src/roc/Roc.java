@@ -64,8 +64,7 @@ public class Roc {
     }
 
     public static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() +
-                "\n[line " + error.token.line + "]");
+        System.err.println("[linia " + error.token.line + "] " + error.getMessage());
         hadRuntimeError = true;
     }
 

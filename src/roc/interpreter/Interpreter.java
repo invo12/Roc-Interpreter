@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
-    private Environment globalEnv = new Environment();
+    private Environment environment = new Environment();
 
     public void interpret(List<Stmt> statements) {
         try {
@@ -20,6 +20,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } catch (RuntimeError error) {
             Roc.runtimeError(error);
         }
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return null;
     }
 
     @Override
@@ -102,7 +110,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
 
-        return globalEnv.get(expr.name);
+        return environment.get(expr.name);
     }
 
     private Object evaluate(Expr expr) {
@@ -111,6 +119,19 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private Object execute(Stmt stmt) {
         return stmt.accept(this);
+    }
+
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     private boolean isTruthy(Object object) {
@@ -155,6 +176,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
 
         evaluate(stmt.expression);
@@ -178,7 +206,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             value = evaluate(stmt.initializer);
         }
 
-        globalEnv.define(stmt.name.lexeme, value);
+        environment.define(stmt.name.lexeme, value);
         return null;
     }
 }

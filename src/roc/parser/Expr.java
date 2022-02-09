@@ -7,12 +7,29 @@ import java.util.List;
 public abstract class Expr {
 
 	public interface Visitor<R> {
+		R visitAssignExpr(Assign expr);
 		R visitBinaryExpr(Binary expr);
 		R visitGroupingExpr(Grouping expr);
 		R visitLiteralExpr(Literal expr);
 		R visitUnaryExpr(Unary expr);
 		R visitVariableExpr(Variable expr);
 	}
+	public static class Assign extends Expr {
+
+		public Token name;
+		public Expr value;
+
+		public Assign(Token name, Expr value) {
+			this.name = name;
+			this.value = value;
+		}
+
+		@Override
+		public <R> R accept(Visitor<R> visitor) {
+			return visitor.visitAssignExpr(this);
+		}
+	}
+
 	public static class Binary extends Expr {
 
 		public Expr left;
