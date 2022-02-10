@@ -7,6 +7,7 @@ import roc.lexer.TokenType;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static roc.lexer.TokenType.*;
 
 public class Parser {
@@ -53,6 +54,7 @@ public class Parser {
         }
 
         consume(SEMICOLON, "Trebuie ';' la finalul declaratiei de variabile");
+
         return new Stmt.Var(name, initializer);
     }
 
@@ -61,7 +63,58 @@ public class Parser {
         if (match(AFISEAZA)) return printStatement();
         else if (match(LEFT_BRACE)) return new Stmt.Block(block());
         else if (match(DACA)) return ifStatement();
+        else if (match(CATTIMP)) return whileStatement();
+        else if (match(PENTRU)) return forStatement();
         return expressionStatement();
+    }
+
+    private Stmt forStatement() {
+
+        consume(LEFT_ROUND, "Trebuie '(' dupa pentru");
+        Stmt initializer;
+        if (match(SEMICOLON)) {
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+        Expr condition = null;
+        if (!check(SEMICOLON)) {
+            condition = expression();
+        }
+        consume(SEMICOLON, "trebuie ';' dupa conditia din pentru");
+
+        Expr increment = null;
+        if (!check(RIGHT_ROUND)) {
+            increment = expression();
+        }
+        consume(RIGHT_ROUND, "Trebuie ')' dupa expresiile din pentru");
+
+        Stmt body = statement();
+
+        if (increment != null) {
+            body = new Stmt.Block(asList(body, new Stmt.Expression(increment)));
+        }
+
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(asList(initializer, body));
+        }
+
+        return body;
+    }
+
+    private Stmt whileStatement() {
+
+        consume(LEFT_ROUND, "Trebuie '(' dupa cattimp");
+        Expr condition = expression();
+        consume(RIGHT_ROUND, "Trebuie ')' dupa conditia din cattimp");
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
     }
 
     private Stmt ifStatement() {
