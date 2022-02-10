@@ -60,19 +60,33 @@ public class Parser {
 
         if (match(AFISEAZA)) return printStatement();
         else if (match(LEFT_BRACE)) return new Stmt.Block(block());
-
+        else if (match(DACA)) return ifStatement();
         return expressionStatement();
+    }
+
+    private Stmt ifStatement() {
+
+        consume(LEFT_ROUND, "Trebuie '(' dupa if");
+        Expr condition = expression();
+        consume(RIGHT_ROUND, "Trebuie ')' dupa expresia din daca");
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(ALTFEL)) {
+            elseBranch = statement();
+        }
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private List<Stmt> block() {
 
         List<Stmt> statements = new ArrayList<>();
 
-        while(!check(RIGHT_BRACE) && !isAtEnd()){
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
             statements.add(declaration());
         }
 
-        consume(RIGHT_BRACE,"Trebuie '}' la finalul blocului");
+        consume(RIGHT_BRACE, "Trebuie '}' la finalul blocului");
         return statements;
     }
 
@@ -96,7 +110,7 @@ public class Parser {
 
     private Expr assignment() {
 
-        Expr expr = equality();
+        Expr expr = or();
 
         if (match(EQUAL)) {
             Token equals = previous();
@@ -108,6 +122,34 @@ public class Parser {
             }
 
             error(equals, "Nu pot atribui valoare acestei entitati");
+        }
+
+        return expr;
+    }
+
+    private Expr or() {
+
+        Expr expr = and();
+
+        while (match(OR)) {
+
+            Token operator = previous();
+            Expr right = and();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+
+        return expr;
+    }
+
+    private Expr and() {
+
+        Expr expr = equality();
+
+        while (match(AND)) {
+
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
         }
 
         return expr;
