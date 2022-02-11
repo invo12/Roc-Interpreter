@@ -25,11 +25,15 @@ public class Environment {
             return;
         }
 
-        if(enclosing != null){
+        if (enclosing != null) {
             enclosing.assign(name, value);
             return;
         }
         throw new RuntimeError(name, "Variabila nedefinita '" + name.lexeme + "'.");
+    }
+
+    public void assignAt(int distance, Token name, Object value) {
+        ancestor(distance).values.put(name.lexeme, value);
     }
 
     public void define(String name, Object value) {
@@ -48,5 +52,19 @@ public class Environment {
         }
 
         throw new RuntimeError(name, "Variabila nedefinita '" + name.lexeme + "'");
+    }
+
+    public Object getAt(int distance, String name) {
+        return ancestor(distance).values.get(name);
+    }
+
+    private Environment ancestor(int distance) {
+
+        Environment environment = this;
+        for (int i = 0; i < distance; i++) {
+            environment = environment.enclosing;
+        }
+
+        return environment;
     }
 }

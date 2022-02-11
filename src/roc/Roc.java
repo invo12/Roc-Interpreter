@@ -8,6 +8,7 @@ import roc.lexer.TokenType;
 import roc.parser.Expr;
 import roc.parser.Parser;
 import roc.parser.Stmt;
+import roc.resolver.Resolver;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -47,6 +48,12 @@ public class Roc {
 
         if (hadError) System.exit(65);
         if (hadRuntimeError) System.exit(70);
+
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (hadError) return;
 
         interpreter.interpret(statements);
     }
