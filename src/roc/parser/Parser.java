@@ -36,12 +36,34 @@ public class Parser {
 
         try {
             if (match(VAR)) return varDeclaration();
-
+            if (match(FUN)) return function("functie");
             return statement();
         } catch (ParseError error) {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt function(String kind) {
+
+        Token name = consume(IDENTIFIER, "Trebuie nume pentru " + kind);
+        consume(LEFT_ROUND, "Trebuie '(' dupa nume " + kind);
+
+        List<Token> parameters = new ArrayList<>();
+        if (!check(RIGHT_ROUND)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Nu poti avea mai mult de 255 de parametri");
+                }
+                parameters.add(consume(IDENTIFIER, "Trebuie ca parametrul sa aiba nume"));
+            } while (match(COMMA));
+        }
+        consume(RIGHT_ROUND, "Trebuie ')' dupa parametri");
+
+        consume(LEFT_BRACE, "Trebuie '{' inainte de corpul " + kind);
+        List<Stmt> body = block();
+
+        return new Stmt.Function(name, parameters, body);
     }
 
     private Stmt varDeclaration() {
@@ -65,7 +87,20 @@ public class Parser {
         else if (match(DACA)) return ifStatement();
         else if (match(CATTIMP)) return whileStatement();
         else if (match(PENTRU)) return forStatement();
+        else if (match(RETURNEAZA)) return returnStatement();
         return expressionStatement();
+    }
+
+    private Stmt returnStatement() {
+
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(SEMICOLON)) {
+            value = expression();
+        }
+
+        consume(SEMICOLON, "Trebuie ';' dupa valoarea returnata");
+        return new Stmt.Return(keyword, value);
     }
 
     private Stmt forStatement() {
@@ -271,7 +306,40 @@ public class Parser {
             return new Expr.Unary(operator, right);
         }
 
-        return primary();
+        return call();
+    }
+
+    private Expr call() {
+
+        Expr expr = primary();
+
+        while (true) {
+
+            if (match(LEFT_ROUND)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expr finishCall(Expr callee) {
+
+        List<Expr> arguments = new ArrayList<>();
+        if (!check(RIGHT_ROUND)) {
+            do {
+                if (arguments.size() >= 255) {
+                    error(peek(), "Functia nu poate primi mai mult de 255 de argumente.");
+                }
+                arguments.add(expression());
+            } while (match(COMMA));
+        }
+
+        Token paren = consume(RIGHT_ROUND, "Trebuie ')' dupa argumentele functiei");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {

@@ -1,10 +1,5 @@
 package roc.utils;
 
-import roc.lexer.Token;
-import roc.lexer.TokenType;
-import roc.parser.AstPrinter;
-import roc.parser.Expr;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -17,8 +12,10 @@ public class GenerateAST {
         defineAst(".", "Stmt", Arrays.asList(
                 "Block: List<Stmt> statements",
                 "Expression: Expr expression",
+                "Function: Token name, List<Token> params, List<Stmt> body",
                 "If: Expr condition, Stmt thenBranch, Stmt elseBranch",
                 "Print: Expr expression",
+                "Return: Token keyword, Expr value",
                 "Var: Token name, Expr initializer",
                 "While: Expr condition, Stmt body"
         ));
@@ -26,12 +23,13 @@ public class GenerateAST {
         defineAst(".", "Expr", Arrays.asList(
                 "Assign: Token name, Expr value",
                 "Binary: Expr left, Token operator, Expr right",
+                "Call: Expr calle, Token paren, List<Expr> arguments",
                 "Grouping: Expr expression",
                 "Literal: Object value",
                 "Logical: Expr left, Token operator, Expr right",
                 "Unary: Token operator, Expr right",
                 "Variable: Token name"
-                ));
+        ));
     }
 
     private static void defineAst(
