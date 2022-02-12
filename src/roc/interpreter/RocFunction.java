@@ -10,9 +10,12 @@ public class RocFunction implements RocCallable {
     private final Stmt.Function declaration;
     private final Environment closure;
 
-    public RocFunction(Stmt.Function declaration, Environment closure) {
+    private final boolean isInitializer;
+
+    public RocFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
         this.declaration = declaration;
         this.closure = closure;
+        this.isInitializer = isInitializer;
     }
 
 
@@ -32,6 +35,7 @@ public class RocFunction implements RocCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
+            if(isInitializer) return closure.getAt(0, "this");
             return returnValue.value;
         }
         return null;
@@ -40,5 +44,12 @@ public class RocFunction implements RocCallable {
     @Override
     public String toString() {
         return "<functia " + declaration.name.lexeme + ">";
+    }
+
+    RocFunction bind(RocInstance instance) {
+
+        Environment environment = new Environment(closure);
+        environment.define("this", instance);
+        return new RocFunction(declaration, environment, isInitializer);
     }
 }

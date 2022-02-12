@@ -138,6 +138,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitGetExpr(Expr.Get expr) {
+
+        Object object = evaluate(expr.object);
+        if (object instanceof RocInstance) {
+            return ((RocInstance) object).get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name, "Poti avea proprietati doar pe instante");
+    }
+
+    @Override
     public Object visitGroupingExpr(Expr.Grouping expr) {
         return evaluate(expr.expression);
     }
@@ -157,6 +168,27 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             if (!isTruthy(left)) return left;
         }
         return evaluate(expr.right);
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr) {
+
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof RocInstance)) {
+            throw new RuntimeError(expr.name, "Doar instantele pot avea proprietati");
+        }
+
+        Object value = evaluate(expr.value);
+        ((RocInstance) object).set(expr.name, value);
+        return null;
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.This expr) {
+
+        lookUpVariable(expr.keyword, expr);
+        return null;
     }
 
     @Override
@@ -188,6 +220,22 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+
+        environment.define(stmt.name.lexeme, null);
+
+        Map<String, RocFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            RocFunction function = new RocFunction(method, environment, "init".equals(method.name.lexeme));
+            methods.put(method.name.lexeme, function);
+        }
+
+        RocClass clasa = new RocClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, clasa);
+        return null;
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
 
         evaluate(stmt.expression);
@@ -197,7 +245,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
 
-        RocFunction function = new RocFunction(stmt, environment);
+        RocFunction function = new RocFunction(stmt, environment, false);
         environment.define(stmt.name.lexeme, function);
         return null;
     }

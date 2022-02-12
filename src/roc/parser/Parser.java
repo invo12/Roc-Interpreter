@@ -36,7 +36,8 @@ public class Parser {
 
         try {
             if (match(VAR)) return varDeclaration();
-            if (match(FUN)) return function("functie");
+            else if (match(FUN)) return function("functie");
+            else if (match(CLASA)) return classDeclaration();
             return statement();
         } catch (ParseError error) {
             synchronize();
@@ -44,7 +45,19 @@ public class Parser {
         }
     }
 
-    private Stmt function(String kind) {
+    private Stmt classDeclaration() {
+        Token name = consume(IDENTIFIER, "Trebuie ca, clasa sa aiba un nume");
+        consume(LEFT_BRACE, "Trebuie '{' inainte de corpul clasei");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("metoda"));
+        }
+        consume(RIGHT_BRACE, "Trebuie '}' dupa corpul clasei");
+        return new Stmt.Class(name, methods);
+    }
+
+    private Stmt.Function function(String kind) {
 
         Token name = consume(IDENTIFIER, "Trebuie nume pentru " + kind);
         consume(LEFT_ROUND, "Trebuie '(' dupa nume " + kind);
@@ -208,6 +221,9 @@ public class Parser {
                 Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
             }
+            if (expr instanceof Expr.Get get) {
+                return new Expr.Set(get.object, get.name, value);
+            }
 
             error(equals, "Nu pot atribui valoare acestei entitati");
         }
@@ -317,6 +333,9 @@ public class Parser {
 
             if (match(LEFT_ROUND)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Trebuie numele unei proprietati dupa '.'");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }
@@ -358,6 +377,7 @@ public class Parser {
             return new Expr.Grouping(expression);
         }
 
+        if (match(INSTANTA)) return new Expr.This(previous());
         throw error(peek(), "Trebuie expresie.");
     }
 
