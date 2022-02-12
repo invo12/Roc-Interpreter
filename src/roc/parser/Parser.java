@@ -47,6 +47,13 @@ public class Parser {
 
     private Stmt classDeclaration() {
         Token name = consume(IDENTIFIER, "Trebuie ca, clasa sa aiba un nume");
+
+        Expr.Variable superclass = null;
+        if (match(MOSTENESTE)) {
+            consume(IDENTIFIER, "Trebuie ca superclasa sa aiba un nume");
+            superclass = new Expr.Variable(previous());
+        }
+
         consume(LEFT_BRACE, "Trebuie '{' inainte de corpul clasei");
 
         List<Stmt.Function> methods = new ArrayList<>();
@@ -54,7 +61,7 @@ public class Parser {
             methods.add(function("metoda"));
         }
         consume(RIGHT_BRACE, "Trebuie '}' dupa corpul clasei");
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt.Function function(String kind) {
@@ -378,6 +385,13 @@ public class Parser {
         }
 
         if (match(INSTANTA)) return new Expr.This(previous());
+
+        if (match(SUPER)) {
+            Token keyword = previous();
+            consume(DOT, "Trebuie '.' dupa super");
+            Token method = consume(IDENTIFIER, "Trebuie numele unei metode din superclasa");
+            return new Expr.Super(keyword, method);
+        }
         throw error(peek(), "Trebuie expresie.");
     }
 

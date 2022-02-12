@@ -6,10 +6,12 @@ import java.util.Map;
 public class RocClass implements RocCallable {
 
     final String name;
+    final RocClass superclass;
     private final Map<String, RocFunction> methods;
 
-    public RocClass(String name, Map<String, RocFunction> methods) {
+    public RocClass(String name, RocClass superclass, Map<String, RocFunction> methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
@@ -39,6 +41,10 @@ public class RocClass implements RocCallable {
     RocFunction findMethod(String name) {
         if (methods.containsKey(name)) {
             return methods.get(name);
+        }
+
+        if (superclass != null) {
+            return superclass.findMethod(name);
         }
 
         return null;

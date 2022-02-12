@@ -1,11 +1,14 @@
-clasa Bacon {
-  init(){
-    this.a = 6;
-  }
-  eat() {
-    afiseaza "Crunch crunch crunch!";
-    returneaza a;
+clasa Doughnut {
+  init() {
+    this.a=2;
   }
 }
 
-afiseaza Bacon().a;
+clasa BostonCream mosteneste Doughnut {
+    init(){
+        super.init();
+        this.b = 3;
+    }
+}
+
+afiseaza BostonCream().a;
